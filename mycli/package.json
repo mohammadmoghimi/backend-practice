@@ -2,9 +2,12 @@
   "name": "mycli",
   "version": "1.0.0",
   "description": "command line interface with node js",
-  "main": "index.js",
+  "main": "bin/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "mycli": "./bin/index.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +18,10 @@
   "bugs": {
     "url": "https://github.com/mohammadmoghimi/backend-practice/issues"
   },
-  "homepage": "https://github.com/mohammadmoghimi/backend-practice#readme"
+  "homepage": "https://github.com/mohammadmoghimi/backend-practice#readme",
+  "dependencies": {
+    "boxen": "^7.1.1",
+    "chalk": "^5.3.0",
+    "yargs": "^17.7.2"
+  }
 }
