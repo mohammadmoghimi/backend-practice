@@ -6,15 +6,21 @@ function readInputFromFile(filePath) {
     const input = fs.readFileSync(filePath, 'utf-8').split('\n').map(line => line.trim());
     const numGroups = parseInt(input[0], 10);
     const groups = [];
-    for (let i = 1; i < input.length; i += 3) {
-        const algorithm = parseInt(input[i], 10);
-        const A = parseInt(input[i + 1], 10);
-        const B = parseInt(input[i + 2], 10);
-        groups.push({ algorithm, A, B });
+    let index = 1;
+
+    while (index < input.length) {
+        const algorithm = parseInt(input[index++], 10);
+        const bitLength = parseInt(input[index++], 10);
+        const A = parseInt(input[index++], 10);
+        const B = parseInt(input[index++], 10);
+        groups.push({ algorithm, bitLength, A, B });
     }
+
     return { numGroups, groups };
 }
-
+function writeToFile(content) {
+    fs.appendFileSync('out.txt', content + '\n');
+}
 // Optimized Add and Shift function (same as your provided code)
 function optimizedAddAndShift(A, B, bitLength) {
     // Convert A and B to binary strings with padding
@@ -27,7 +33,7 @@ function optimizedAddAndShift(A, B, bitLength) {
 
     // Add B to M
     M = M.slice(0, -bitLength) + binaryB;
-    console.log(`Initial M: ${M}`);
+    writeToFile(`Initial M: ${M}`);
 
     // Helper function to perform binary addition with carry
     function binaryAdd(bin1, bin2) {
@@ -52,7 +58,7 @@ function optimizedAddAndShift(A, B, bitLength) {
             // Add A to the most significant bits of M using binary addition
             let { result: newM, carry } = binaryAdd(M, shiftedA);
             M = newM;
-            console.log(`After adding A << ${bitLength}: ${M}`);
+            writeToFile(`After adding A << ${bitLength}: ${M}`);
 
             // Store carry to determine if there was an overflow
             if (carry > 0) {
@@ -66,7 +72,7 @@ function optimizedAddAndShift(A, B, bitLength) {
             M = '1' + M.slice(1);
             overflow = false;
         }
-        console.log(`After shifting right: ${M}`);
+        writeToFile(`After shifting right: ${M}`);
     }
 
     // Return the final value of M, which is the product of A and B
@@ -123,23 +129,23 @@ function boothAlgorithm(A, B, bitLength) {
     let Qminus1 = '0'; // Initialize Q-1 with 0
     let Areg = '0'.repeat(bitLength); // Initialize A with zeros
 
-    console.log(`Initial Product: ${Areg}${Q}${Qminus1}`);
+    writeToFile(`Initial Product: ${Areg}${Q}${Qminus1}`);
 
     for (let i = 0; i < bitLength; i++) {
         const lastTwoBits = Q.slice(-1) + Qminus1;
         if (lastTwoBits === '01') {
             Areg = binAdd(Areg, M);
-            console.log(`Step ${i + 1}: Add M - Product: ${Areg}${Q}${Qminus1}`);
+            writeToFile(`Step ${i + 1}: Add M - Product: ${Areg}${Q}${Qminus1}`);
         } else if (lastTwoBits === '10') {
             Areg = binAdd(Areg, negM);
-            console.log(`Step ${i + 1}: Subtract M - Product: ${Areg}${Q}${Qminus1}`);
+            writeToFile(`Step ${i + 1}: Subtract M - Product: ${Areg}${Q}${Qminus1}`);
         }
         // Perform arithmetic shift right
         const shifted = shiftRight(Areg, Q, Qminus1);
         Areg = shifted.Areg;
         Q = shifted.Q;
         Qminus1 = shifted.Qminus1;
-        console.log(`Step ${i + 1}: Shift Right - Product: ${Areg}${Q}${Qminus1}`);
+        writeToFile(`Step ${i + 1}: Shift Right - Product: ${Areg}${Q}${Qminus1}`);
     }
 
     // Convert result back to decimal
@@ -151,6 +157,7 @@ function boothAlgorithm(A, B, bitLength) {
 function main() {
     const filePath = path.join(__dirname, 'in.txt');
     const { numGroups, groups } = readInputFromFile(filePath);
+    fs.writeFileSync('out.txt', '');
 
     groups.forEach(({ algorithm, A, B }, index) => {
         const bitLength = Math.max(Math.abs(A).toString(2).length, Math.abs(B).toString(2).length) + 1; // Extra bit for sign
@@ -159,18 +166,17 @@ function main() {
         if (algorithm === 0) {
             // Use optimized add and shift (already implemented)
             product = optimizedAddAndShift(A, B, bitLength);
-            console.log(`Group ${index + 1} (A=${A}, B=${B}) using Optimized Add and Shift:`);
+            writeToFile(`Group ${index + 1} (A=${A}, B=${B}) using Optimized Add and Shift:`);
         } else if (algorithm === 1) {
             // Use Booth's algorithm
             product = boothAlgorithm(A, B, bitLength); // Corrected function name
-            console.log(`Group ${index + 1} (A=${A}, B=${B}) using Booth algorithm:`);
+            writeToFile(`Group ${index + 1} (A=${A}, B=${B}) using Booth algorithm:`);
         } else {
-            console.log(`Unknown algorithm type: ${algorithm}`);
+            writeToFile(`Unknown algorithm type: ${algorithm}`);
             return;
         }
 
-        console.log(`Product: ${product}\n`);
+        writeToFile(`Product: ${product}\n`);
     });
 }
-// Run the main function
 main();
