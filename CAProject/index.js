@@ -1,14 +1,31 @@
-function optimizedAddAndShift(A, B) {
-    // Convert A and B to binary strings with padding
-    const binaryA = A.toString(2).padStart(4, '0');
-    const binaryB = B.toString(2).padStart(4, '0');
+const fs = require('fs');
+const path = require('path');
 
-    // Initialize M to a binary string with the required length of 8 bits
-    let M = '0'.repeat(8);
-    let overflow = false ;
+// Function to read input from the file and parse it
+function readInputFromFile(filePath) {
+    const input = fs.readFileSync(filePath, 'utf-8').split('\n').map(line => line.trim());
+    const numGroups = parseInt(input[0], 10);
+    const groups = [];
+    for (let i = 1; i < input.length; i += 2) {
+        const A = parseInt(input[i], 10);
+        const B = parseInt(input[i + 1], 10);
+        groups.push({ A, B });
+    }
+    return { numGroups, groups };
+}
+
+// Optimized Add and Shift function (same as your provided code)
+function optimizedAddAndShift(A, B, bitLength) {
+    // Convert A and B to binary strings with padding
+    const binaryA = A.toString(2).padStart(bitLength, '0');
+    const binaryB = B.toString(2).padStart(bitLength, '0');
+
+    // Initialize M to a binary string with the required length
+    let M = '0'.repeat(2 * bitLength);
+    let overflow = false;
 
     // Add B to M
-    M = M.slice(0, -binaryB.length) + binaryB;
+    M = M.slice(0, -bitLength) + binaryB;
     console.log(`Initial M: ${M}`);
 
     // Helper function to perform binary addition with carry
@@ -26,15 +43,15 @@ function optimizedAddAndShift(A, B) {
     }
 
     // Iterate through each bit of B from least significant to most significant
-    for (let i = 0; i < binaryB.length; i++) {
+    for (let i = 0; i < bitLength; i++) {
         // Check the least significant bit (LSB) of B
         if ((B & (1 << i)) !== 0) {
-            // Shift A left by 4 bits and convert to binary string
-            let shiftedA = (A << 4).toString(2).padStart(8, '0');
+            // Shift A left by bitLength bits and convert to binary string
+            let shiftedA = (A << bitLength).toString(2).padStart(2 * bitLength, '0');
             // Add A to the most significant bits of M using binary addition
             let { result: newM, carry } = binaryAdd(M, shiftedA);
             M = newM;
-            console.log(`After adding A << 4: ${M}`);
+            console.log(`After adding A << ${bitLength}: ${M}`);
 
             // Store carry to determine if there was an overflow
             if (carry > 0) {
@@ -55,8 +72,17 @@ function optimizedAddAndShift(A, B) {
     return parseInt(M, 2);
 }
 
-// Example usage:
-const A = 11; 
-const B = 13; 
-const product = optimizedAddAndShift(A, B);
-console.log(`Product of ${A} and ${B} is: ${product}`); 
+// Main function to handle the input and call the multiplication function
+function main() {
+    const filePath = path.join(__dirname, 'in.txt');
+    const { numGroups, groups } = readInputFromFile(filePath);
+    
+    groups.forEach(({ A, B }, index) => {
+        const bitLength = Math.max(A.toString(2).length, B.toString(2).length);
+        const product = optimizedAddAndShift(A, B, bitLength);
+        console.log(`Product of group ${index + 1} (A=${A}, B=${B}) is: ${product}`);
+    });
+}
+
+// Run the main function
+main();
